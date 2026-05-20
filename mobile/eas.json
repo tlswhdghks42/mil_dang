@@ -16,15 +16,6 @@
       "android": {
         "buildType": "apk",
         "gradleCommand": ":app:assembleRelease"
-      },
-      "env": {
-        "ANTHROPIC_API_KEY": "",
-        "WEATHER_API_KEY": "",
-        "FCM_PROJECT_ID": "",
-        "FCM_ACCESS_TOKEN": "",
-        "ALIGO_API_KEY": "",
-        "ALIGO_USER_ID": "",
-        "ALIGO_SENDER": ""
       }
     },
     "production": {
