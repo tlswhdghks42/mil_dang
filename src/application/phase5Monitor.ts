@@ -184,6 +184,8 @@ export function detectAndEnqueueMissedAlerts(args: {
   failedEvents: FailedGuardianEvent[];
   contactMap: Map<string, GuardianContact>;
   payloadMap: Map<string, GuardianSyncPayload>;
+  /** 이벤트별 개별 payload 조회 함수. 동일 guardianId에 복수 실패 이벤트가 있을 때 사용 */
+  payloadResolver?: (event: FailedGuardianEvent) => GuardianSyncPayload | undefined;
   recoveryQueue: AlertRecoveryQueue;
   nowIso: string;
   maxAgeMs?: number;
@@ -198,7 +200,7 @@ export function detectAndEnqueueMissedAlerts(args: {
   let enqueuedForRetry = 0;
   for (const event of recent) {
     const contact = args.contactMap.get(event.guardianUserId);
-    const payload = args.payloadMap.get(event.guardianUserId);
+    const payload = args.payloadResolver?.(event) ?? args.payloadMap.get(event.guardianUserId);
     if (contact && payload) {
       args.recoveryQueue.enqueue({
         payload,

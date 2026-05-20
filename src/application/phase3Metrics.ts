@@ -31,11 +31,16 @@ export class InMemoryMetricsCollector implements MetricsSink {
   private metrics: LlmCallMetric[] = [];
   private counter = 0;
 
+  constructor(private readonly maxSize = 10_000) {}
+
   generateCallId(): string {
     return `call-${++this.counter}-${Date.now()}`;
   }
 
   record(metric: LlmCallMetric): void {
+    if (this.metrics.length >= this.maxSize) {
+      this.metrics.shift();
+    }
     this.metrics.push(metric);
   }
 

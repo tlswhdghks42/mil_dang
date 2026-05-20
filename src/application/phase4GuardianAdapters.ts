@@ -49,13 +49,12 @@ export class FcmPushSender implements PushSender {
       }),
     });
 
+    // Buffer response body once — HTTP Response body is a single-consumption stream
+    const body = await res.json().catch(() => null) as Record<string, unknown> | null;
     if (!res.ok) {
-      const detail = await res.json().catch(() => ({}));
-      throw new Error(`FCM 전송 실패 (${res.status}): ${JSON.stringify(detail)}`);
+      throw new Error(`FCM 전송 실패 (${res.status}): ${JSON.stringify(body ?? {})}`);
     }
-
-    const json = (await res.json()) as { name?: string };
-    return { messageId: json.name ?? `fcm-${Date.now()}` };
+    return { messageId: (body?.name as string | undefined) ?? `fcm-${Date.now()}` };
   }
 }
 
@@ -157,7 +156,7 @@ export async function notifyGuardiansOnMeasurement(args: {
   guardianIds: string[];
   realtimeChannel: GuardianRealtimeChannel;
   nowIso?: string;
-}): Promise<{ realtime: number; skipped: number }> {
+}): Promise<{ realtime: number; skipped: number; allSkippedHighRisk: boolean }> {
   const nowIso = args.nowIso ?? new Date().toISOString();
   const event: GuardianRealtimeEvent = {
     eventType: args.payload.requiresAttention ? "safety_alert" : "blood_sugar_measured",
@@ -177,7 +176,9 @@ export async function notifyGuardiansOnMeasurement(args: {
     }
   }
 
-  return { realtime, skipped };
+  // requiresAttention=true 인데 연결된 보호자가 없으면 caller가 감지할 수 있도록 플래그 반환
+  const allSkippedHighRisk = args.payload.requiresAttention && realtime === 0 && args.guardianIds.length > 0;
+  return { realtime, skipped, allSkippedHighRisk };
 }
 
 // 환경변수 기반 FCM 설정 로더

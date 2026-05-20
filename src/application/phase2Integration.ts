@@ -67,15 +67,23 @@ export function verifyQrToken(token: string, nowIso: string, signing: QrSigningC
     return { valid: false };
   }
 
-  const parsed = JSON.parse(decodeBase64Url(payloadEncoded)) as QrTokenPayload;
-  if (!parsed.userId || !parsed.exp || !parsed.iss || !parsed.aud) return { valid: false };
+  let parsed: QrTokenPayload;
+  try {
+    parsed = JSON.parse(decodeBase64Url(payloadEncoded)) as QrTokenPayload;
+  } catch {
+    return { valid: false };
+  }
+
+  if (!parsed.userId || !parsed.exp || !parsed.iat || !parsed.iss || !parsed.aud) return { valid: false };
 
   const expectedIssuer = signing.issuer ?? "mildang";
   const expectedAudience = signing.audience ?? "suyeong-health-dashboard";
   if (parsed.iss !== expectedIssuer) return { valid: false };
   if (parsed.aud !== expectedAudience) return { valid: false };
 
-  if (new Date(nowIso).getTime() > new Date(parsed.exp).getTime()) return { valid: false };
+  const nowMs = new Date(nowIso).getTime();
+  if (new Date(parsed.iat).getTime() > nowMs) return { valid: false };
+  if (nowMs > new Date(parsed.exp).getTime()) return { valid: false };
 
   return { valid: true, userId: parsed.userId };
 }

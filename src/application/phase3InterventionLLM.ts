@@ -21,6 +21,7 @@ export interface GuardrailResult {
 const FORBIDDEN_BY_SIGNAL: Partial<Record<SignalLevel, string[]>> = {
   critical_low: ["괜찮아요", "안심하세요", "별거 아니에요"],
   low: ["괜찮아요", "안심하세요"],
+  red: ["괜찮아요", "안심하세요", "별거 아니에요"],
 };
 
 const REQUIRED_BY_SIGNAL: Partial<Record<SignalLevel, string[]>> = {

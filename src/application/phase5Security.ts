@@ -110,7 +110,12 @@ export class InMemoryAuditLogStore implements AuditLogStore {
   private entries: AuditLogEntry[] = [];
   private counter = 0;
 
+  constructor(private readonly maxSize = 50_000) {}
+
   async append(entry: AuditLogEntry): Promise<void> {
+    if (this.entries.length >= this.maxSize) {
+      this.entries.shift();
+    }
     this.entries.push(entry);
   }
 
@@ -178,9 +183,11 @@ export async function verifyQrTokenWithAudit(args: {
 // 민감 정보 포함 여부 스캔 (LLM 출력 검증용)
 // ──────────────────────────────────────────────
 const PII_PATTERNS = [
-  /\d{3}-\d{3,4}-\d{4}/,          // 전화번호
-  /\d{6}-[1-4]\d{6}/,             // 주민등록번호
-  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/, // 이메일
+  /\d{3}-\d{3,4}-\d{4}/,                              // 전화번호 (하이픈 있음)
+  /01[016-9]\d{7,8}/,                                  // 전화번호 (하이픈 없음)
+  /\d{6}-[1-4]\d{6}/,                                  // 주민등록번호 (하이픈 있음)
+  /\d{6}[1-4]\d{6}/,                                   // 주민등록번호 (하이픈 없음, 13자리)
+  /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/,  // 이메일
 ];
 
 export function containsPii(text: string): boolean {
@@ -190,7 +197,9 @@ export function containsPii(text: string): boolean {
 export function redactPii(text: string): string {
   let result = text;
   result = result.replace(/\d{3}-\d{3,4}-\d{4}/g, "[전화번호 삭제]");
+  result = result.replace(/01[016-9]\d{7,8}/g, "[전화번호 삭제]");
   result = result.replace(/\d{6}-[1-4]\d{6}/g, "[주민번호 삭제]");
+  result = result.replace(/\d{6}[1-4]\d{6}/g, "[주민번호 삭제]");
   result = result.replace(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g, "[이메일 삭제]");
   return result;
 }

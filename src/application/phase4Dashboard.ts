@@ -14,7 +14,13 @@ export interface BloodSugarRepository {
 export class InMemoryBloodSugarRepository implements BloodSugarRepository {
   private store = new Map<string, BloodSugarRecord>();
 
+  constructor(private readonly maxSize = 10_000) {}
+
   async save(record: BloodSugarRecord): Promise<void> {
+    if (this.store.size >= this.maxSize) {
+      const oldest = [...this.store.values()].sort((a, b) => a.measuredAt.localeCompare(b.measuredAt))[0];
+      if (oldest) this.store.delete(oldest.recordId);
+    }
     this.store.set(record.recordId, record);
   }
 
@@ -62,6 +68,7 @@ export interface DashboardAlerts {
   hasHighRiskSignal: boolean;
   latestSignal: SignalLevel | null;
   consecutiveRedCount: number;
+  consecutiveLowCount: number;
 }
 
 export interface DashboardSummary {
@@ -117,7 +124,13 @@ function computeAlerts(recentRecords: BloodSugarRecord[]): DashboardAlerts {
     else break;
   }
 
-  return { hasHighRiskSignal, latestSignal, consecutiveRedCount };
+  let consecutiveLowCount = 0;
+  for (const r of recentRecords) {
+    if (r.signalLevel === "low" || r.signalLevel === "critical_low") consecutiveLowCount++;
+    else break;
+  }
+
+  return { hasHighRiskSignal, latestSignal, consecutiveRedCount, consecutiveLowCount };
 }
 
 // ──────────────────────────────────────────────
@@ -129,6 +142,7 @@ export async function getDashboardData(args: {
   signing: QrSigningConfig;
   repository: BloodSugarRepository;
   recentLimit?: number;
+  statsLimit?: number;
 }): Promise<DashboardSummary> {
   const verified = verifyQrToken(args.qrToken, args.nowIso, args.signing);
   if (!verified.valid || !verified.userId) {
@@ -136,10 +150,9 @@ export async function getDashboardData(args: {
   }
 
   const limit = args.recentLimit ?? 10;
+  const statsLimit = args.statsLimit ?? 200;
   const recentRecords = await args.repository.findByUserId(verified.userId, limit);
-
-  // 전체 통계를 위해 모든 기록 조회 (전체 limit을 크게)
-  const allRecords = await args.repository.findByUserId(verified.userId, 1000);
+  const allRecords = await args.repository.findByUserId(verified.userId, statsLimit);
 
   return {
     userId: verified.userId,

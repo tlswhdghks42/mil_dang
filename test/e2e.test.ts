@@ -295,24 +295,31 @@ describe("E2E 시나리오 4: 식단·날씨 컨텍스트 통합", () => {
 // 시나리오 5: A/B 프롬프트 + 메트릭 집계
 // ──────────────────────────────────────────────
 describe("E2E 시나리오 5: A/B 프롬프트 실험 + 메트릭 집계", () => {
-  it("두 사용자를 다른 A/B 변형에 배정하고 메트릭 집계", async () => {
+  it("다수 사용자를 A/B 변형에 배정하고 두 변형 모두 사용 확인", async () => {
     const collector = new InMemoryMetricsCollector();
     const registry = createDefaultRegistry();
     const variants = ["standard-v1", "empathetic-v2"];
 
-    const users = ["user-alpha", "user-beta", "user-gamma", "user-delta"];
+    // 10명으로 충분한 다양성을 확보해 두 변형이 모두 배정될 확률 보장
+    const users = [
+      "u-alpha", "u-beta", "u-gamma", "u-delta", "u-epsilon",
+      "u-zeta", "u-eta", "u-theta", "u-iota", "u-kappa",
+    ];
     const assignments = users.map((u) => assignAbVariant(u, "phase5-exp-01", variants));
 
-    // 모든 배정이 유효한 변형
+    // 모든 배정이 유효한 변형이어야 함
     for (const v of assignments) {
       expect(variants).toContain(v);
     }
+    // 해시 기반 결정론적 배정이 두 변형 모두를 커버하는지 검증 (A/B 분산 확인)
+    expect(assignments).toContain("standard-v1");
+    expect(assignments).toContain("empathetic-v2");
 
     // 각 사용자별로 측정 + LLM 실행
     for (const [i, userId] of users.entries()) {
       const templateId = assignAbVariant(userId, "phase5-exp-01", variants);
       await analyzeMeasurementWithLlm({
-        glucoseMgDl: 90 + i * 10,
+        glucoseMgDl: 90 + (i % 5) * 10,
         mealTiming: "fasting",
         llmOptions: {
           llmClient: makeLlmClient("안정적인 혈당이에요."),
@@ -325,13 +332,12 @@ describe("E2E 시나리오 5: A/B 프롬프트 실험 + 메트릭 집계", () =>
     }
 
     const summary = collector.summary();
-    expect(summary.totalCalls).toBe(4);
+    expect(summary.totalCalls).toBe(10);
     expect(summary.failureRate).toBe(0);
-    expect(summary.avgLatencyMs).toBeGreaterThanOrEqual(0);
 
-    // 두 변형 모두 사용됐는지 확인
+    // 메트릭에서 두 변형(template@version) 모두 사용됐는지 확인
     const usedVersions = new Set(collector.getAll().map((m) => m.promptVersion));
-    expect(usedVersions.size).toBeGreaterThanOrEqual(1);
+    expect(usedVersions.size).toBeGreaterThanOrEqual(2);
   });
 });
 

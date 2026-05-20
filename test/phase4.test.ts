@@ -202,11 +202,16 @@ describe("phase4 weather adapter - makeKmaSuyeongFetcher", () => {
     };
 
     const cache = new WeatherCache();
-    const fetcher = makeKmaSuyeongFetcher({ serviceKey: "k", cacheTtlMs: 60_000 }, rawFetcher, cache);
+    // maxRetryAttempts: 1 → 재시도 없이 1회 시도만, retryBackoffMs: 0 → 대기 없음
+    const fetcher = makeKmaSuyeongFetcher(
+      { serviceKey: "k", cacheTtlMs: 60_000, maxRetryAttempts: 1, retryBackoffMs: 0 },
+      rawFetcher,
+      cache,
+    );
 
     await expect(fetchSuyeongWeather(fetcher)).rejects.toThrow();
     await expect(fetchSuyeongWeather(fetcher)).rejects.toThrow();
-    expect(callCount).toBe(2); // no caching on error
+    expect(callCount).toBe(2); // no caching on error, 1 attempt per call
   });
 });
 

@@ -39,8 +39,6 @@ export interface AnalyzeInputWithLlm extends AnalyzeInput {
   llmOptions?: LlmRefinementOptions;
 }
 
-let _callCounter = 0;
-
 export function analyzeMeasurement(input: AnalyzeInput): AnalyzeOutput {
   const signal = classifySignal(input.glucoseMgDl, input.mealTiming);
   const interventionText = composeInterventionText({
@@ -68,7 +66,7 @@ export async function analyzeMeasurementWithLlm(input: AnalyzeInputWithLlm): Pro
   const { llmClient, metricsSink, promptRegistry, templateId, weather, dietSummary, callIdGenerator } =
     input.llmOptions;
 
-  const callId = callIdGenerator?.() ?? `call-${++_callCounter}-${Date.now()}`;
+  const callId = callIdGenerator?.() ?? `call-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
   const phase3Input: Phase3InterventionInput = {
     signal: base.signal,
@@ -117,7 +115,11 @@ export async function analyzeMeasurementWithLlm(input: AnalyzeInputWithLlm): Pro
 
   let refinedText = base.interventionText;
 
-  if (success && trimmed) {
+  if (success && !trimmed) {
+    // 빈 응답은 조용한 fallback이 아니라 LLM 실패로 기록
+    success = false;
+    failureReason = "LLM returned empty response";
+  } else if (success && trimmed) {
     const guardrail = checkGuardrails(trimmed, base.signal);
     guardrailPassed = guardrail.passed;
     if (guardrail.passed) {

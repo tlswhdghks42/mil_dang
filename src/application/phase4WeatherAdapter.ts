@@ -6,6 +6,8 @@ export interface KmaApiConfig {
   nx?: number;
   ny?: number;
   cacheTtlMs?: number;
+  maxRetryAttempts?: number;
+  retryBackoffMs?: number;
 }
 
 // 수영구 기본 격자 좌표 (기상청 Lambert 격자)
@@ -113,30 +115,38 @@ export function makeKmaSuyeongFetcher(
   cache = new WeatherCache(),
 ): WeatherFetcher {
   const ttlMs = config.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
+  const maxAttempts = config.maxRetryAttempts ?? 3;
+  const backoffMs = config.retryBackoffMs ?? 1000;
+  const nx = config.nx ?? SUYEONG_NX;
+  const ny = config.ny ?? SUYEONG_NY;
 
   return async (_url: string): Promise<WeatherFetcherResponse> => {
-    const cacheKey = "suyeong-weather";
+    const nowIso = new Date().toISOString();
+    // hour-level granularity key: prevents stale data across coordinates or hours
+    const cacheKey = `kma-${nx}-${ny}-${nowIso.slice(0, 13)}`;
     const cached = cache.get(cacheKey);
     if (cached) return cached;
 
-    const kmaUrl = buildKmaUrl(config, new Date().toISOString());
-    const raw = await rawFetcher(kmaUrl);
+    const kmaUrl = buildKmaUrl(config, nowIso);
+    // fetchWithRetry throws on all-attempts-exhausted, so raw.ok is always true here
+    const raw = await fetchWithRetry(rawFetcher, kmaUrl, maxAttempts, backoffMs);
 
+    // Memoize parsed body to avoid double-consumption of the HTTP body stream
+    let parsedBody: { temperatureC: number; condition: string } | undefined;
     const response: WeatherFetcherResponse = {
-      ok: raw.ok,
+      ok: true,
       status: raw.status,
       async json() {
-        const data = await raw.json();
-        // KMA 응답을 phase2Weather가 기대하는 형태로 변환
-        const { temperatureC, conditionText } = parseKmaApiResponse(data);
-        return { temperatureC, condition: conditionText };
+        if (!parsedBody) {
+          const data = await raw.json();
+          const { temperatureC, conditionText } = parseKmaApiResponse(data);
+          parsedBody = { temperatureC, condition: conditionText };
+        }
+        return parsedBody;
       },
     };
 
-    if (raw.ok) {
-      cache.set(cacheKey, response, ttlMs);
-    }
-
+    cache.set(cacheKey, response, ttlMs);
     return response;
   };
 }
@@ -153,6 +163,8 @@ export function loadKmaConfigFromEnv(): KmaApiConfig {
     nx: Number(process.env.WEATHER_NX ?? SUYEONG_NX),
     ny: Number(process.env.WEATHER_NY ?? SUYEONG_NY),
     cacheTtlMs: Number(process.env.WEATHER_CACHE_TTL_MS ?? DEFAULT_CACHE_TTL_MS),
+    maxRetryAttempts: process.env.WEATHER_MAX_RETRY_ATTEMPTS ? Number(process.env.WEATHER_MAX_RETRY_ATTEMPTS) : 3,
+    retryBackoffMs: process.env.WEATHER_RETRY_BACKOFF_MS ? Number(process.env.WEATHER_RETRY_BACKOFF_MS) : 1000,
   };
 }
 

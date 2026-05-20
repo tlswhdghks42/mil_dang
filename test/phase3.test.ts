@@ -599,7 +599,7 @@ describe("metrics aggregate integration", () => {
     const collector = new InMemoryMetricsCollector();
     const signals = [
       { glucose: 100, timing: "fasting" as const, llmOutput: "안정적입니다." },
-      { glucose: 45, timing: "fasting" as const, llmOutput: "" }, // empty → fallback, success
+      { glucose: 45, timing: "fasting" as const, llmOutput: "" }, // empty → fallback + counted as failure
       { glucose: 200, timing: "postprandial" as const, llmOutput: "복약 확인 후 재측정해 주세요." },
     ];
 
@@ -616,6 +616,8 @@ describe("metrics aggregate integration", () => {
 
     const summary = collector.summary();
     expect(summary.totalCalls).toBe(3);
-    expect(summary.failureRate).toBe(0); // no errors thrown, just empty outputs
+    // 빈 응답(index 1)은 이제 success=false로 기록됨
+    expect(summary.failureCount).toBe(1);
+    expect(summary.failureRate).toBeCloseTo(1 / 3, 5);
   });
 });
