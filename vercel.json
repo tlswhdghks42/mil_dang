@@ -1,0 +1,8 @@
+{
+  "buildCommand": "cd mobile && npm ci --legacy-peer-deps && npx expo export --platform web",
+  "outputDirectory": "mobile/dist",
+  "installCommand": "echo skip",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ]
+}

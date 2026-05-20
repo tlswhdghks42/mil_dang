@@ -29,6 +29,11 @@
       "supportsTablet": false,
       "bundleIdentifier": "kr.go.suyeong.mildang"
     },
+    "web": {
+      "output": "static",
+      "bundler": "metro",
+      "favicon": "./assets/favicon.png"
+    },
     "extra": {
       "eas": {
         "projectId": "f0585395-b23b-4e68-b076-36125d014d1b"

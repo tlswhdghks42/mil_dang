@@ -1,31 +1,49 @@
 import { StatusBar } from "expo-status-bar";
 import React from "react";
-import { SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Platform, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { MeasurementScreen } from "./screens/MeasurementScreen";
 import type { LlmClient } from "../src/application/phase3InterventionLLM";
 
-// Groq 무료 API 기반 LLM 클라이언트 (console.groq.com에서 무료 키 발급)
-function createLlmClient(): LlmClient {
-  const apiKey = process.env.GROQ_API_KEY ?? "";
+const GROQ_BODY = (prompt: string) =>
+  JSON.stringify({
+    model: "llama-3.1-8b-instant",
+    max_tokens: 256,
+    messages: [{ role: "user", content: prompt }],
+  });
 
+// 웹: /api/llm 프록시 경유 (API 키 서버에서 보관)
+// 네이티브: GROQ_API_KEY 환경변수로 직접 호출
+function createLlmClient(): LlmClient {
   return {
     async complete(prompt: string): Promise<string> {
-      if (!apiKey) return "";
-      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          max_tokens: 256,
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      if (!res.ok) throw new Error(`Groq API 오류: ${res.status}`);
-      const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
-      return json.choices[0]?.message.content ?? "";
+      try {
+        if (Platform.OS === "web") {
+          const res = await fetch("/api/llm", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: GROQ_BODY(prompt),
+          });
+          if (!res.ok) return "";
+          const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+          return json.choices[0]?.message.content ?? "";
+        } else {
+          const apiKey = process.env.GROQ_API_KEY ?? "";
+          if (!apiKey) return "";
+          const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${apiKey}`,
+            },
+            body: GROQ_BODY(prompt),
+          });
+          if (!res.ok) return "";
+          const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+          return json.choices[0]?.message.content ?? "";
+        }
+      } catch {
+        return "";
+      }
     },
   };
 }
