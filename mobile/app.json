@@ -30,7 +30,7 @@
       "bundleIdentifier": "kr.go.suyeong.mildang"
     },
     "web": {
-      "output": "static",
+      "output": "single",
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
