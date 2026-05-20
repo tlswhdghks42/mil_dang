@@ -1,199 +1,99 @@
-.page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
+.page { min-height: 100vh; display: flex; flex-direction: column; background: #F5F5F5; }
 
+/* Header */
 .header {
   background: #1565C0;
-  padding: 20px 24px;
-}
-
-.headerTitle {
-  font-size: 32px;
-  font-weight: 800;
-  color: #fff;
-}
-
-.headerSub {
-  font-size: 15px;
-  color: #90CAF9;
-  margin-top: 4px;
-}
-
-.main {
-  flex: 1;
-  max-width: 480px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 32px 24px;
+  padding: 16px 24px;
   display: flex;
-  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
 }
-
-.title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1A237E;
-  margin-bottom: 4px;
+.headerTitle { font-size: 28px; font-weight: 800; color: #fff; }
+.headerSub { font-size: 13px; color: #90CAF9; margin-top: 2px; }
+.weatherBadge {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 12px; padding: 8px 14px;
+  font-size: 15px; color: #fff; font-weight: 600;
 }
+.weatherRisk { background: #FF6B35; border-radius: 6px; padding: 2px 8px; font-size: 12px; }
 
-.subtitle {
-  font-size: 16px;
-  color: #5C6BC0;
-  margin-bottom: 32px;
+/* Tabs */
+.tabBar {
+  display: flex; background: #fff;
+  border-bottom: 2px solid #E3F2FD;
 }
-
-.label {
-  font-size: 17px;
-  font-weight: 600;
-  color: #424242;
-  margin-bottom: 8px;
-  margin-top: 20px;
-  display: block;
-}
-
-.input {
-  width: 100%;
-  background: #fff;
-  border: 2px solid #1565C0;
-  border-radius: 12px;
-  padding: 16px 20px;
-  font-size: 32px;
-  font-weight: 700;
-  color: #1A237E;
-  text-align: center;
-  outline: none;
-}
-
-.input:focus {
-  border-color: #0D47A1;
-  box-shadow: 0 0 0 3px rgba(21,101,192,0.15);
-}
-
-.timingRow {
-  display: flex;
-  gap: 8px;
-}
-
-.timingButton {
-  flex: 1;
-  padding: 14px 8px;
-  border-radius: 12px;
-  border: 2px solid #BDBDBD;
-  background: #fff;
-  font-size: 15px;
-  font-weight: 600;
-  color: #757575;
-  cursor: pointer;
+.tabBtn {
+  flex: 1; padding: 14px;
+  font-size: 16px; font-weight: 600; color: #9E9E9E;
+  background: none; border: none; cursor: pointer;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
   transition: all 0.15s;
 }
+.tabActive { color: #1565C0; border-bottom-color: #1565C0; }
 
-.timingButton:hover {
-  border-color: #90CAF9;
-  color: #1565C0;
-}
+/* Main */
+.main { flex: 1; max-width: 480px; width: 100%; margin: 0 auto; padding: 28px 20px; display: flex; flex-direction: column; }
 
-.timingActive {
-  border-color: #1565C0;
-  background: #E3F2FD;
-  color: #1565C0;
-}
+.title { font-size: 26px; font-weight: 700; color: #1A237E; margin-bottom: 4px; }
+.subtitle { font-size: 15px; color: #5C6BC0; margin-bottom: 28px; }
+.label { font-size: 16px; font-weight: 600; color: #424242; margin-bottom: 8px; margin-top: 16px; display: block; }
 
-.error {
-  color: #C62828;
-  font-size: 15px;
-  margin-top: 12px;
+.input {
+  width: 100%; background: #fff; border: 2px solid #1565C0;
+  border-radius: 12px; padding: 16px 20px;
+  font-size: 32px; font-weight: 700; color: #1A237E; text-align: center; outline: none;
 }
+.input:focus { border-color: #0D47A1; box-shadow: 0 0 0 3px rgba(21,101,192,0.15); }
+
+.timingRow { display: flex; gap: 8px; }
+.timingButton {
+  flex: 1; padding: 14px 8px; border-radius: 12px;
+  border: 2px solid #BDBDBD; background: #fff;
+  font-size: 15px; font-weight: 600; color: #757575; cursor: pointer; transition: all 0.15s;
+}
+.timingButton:hover { border-color: #90CAF9; color: #1565C0; }
+.timingActive { border-color: #1565C0; background: #E3F2FD; color: #1565C0; }
+
+.error { color: #C62828; font-size: 15px; margin-top: 12px; }
 
 .measureButton {
-  margin-top: 32px;
-  width: 100%;
-  background: #1565C0;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
+  margin-top: 28px; width: 100%; background: #1565C0; color: #fff;
+  border: none; border-radius: 16px; padding: 20px;
+  font-size: 20px; font-weight: 700; cursor: pointer; transition: background 0.15s;
 }
-
-.measureButton:hover:not(:disabled) {
-  background: #0D47A1;
-}
-
-.measureButton:disabled {
-  background: #90CAF9;
-  cursor: not-allowed;
-}
+.measureButton:hover:not(:disabled) { background: #0D47A1; }
+.measureButton:disabled { background: #90CAF9; cursor: not-allowed; }
 
 /* Result */
-.signalCard {
-  border-radius: 24px;
-  padding: 32px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.signalEmoji {
-  font-size: 64px;
-  margin-bottom: 8px;
-}
-
-.signalLabel {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 8px;
-}
-
-.glucoseValue {
-  font-size: 40px;
-  font-weight: 800;
-  color: #1A237E;
-}
-
-.interventionBox {
-  background: #fff;
-  border-radius: 16px;
-  padding: 20px;
-  margin-bottom: 16px;
-}
-
-.interventionText {
-  font-size: 18px;
-  line-height: 1.8;
-  color: #212121;
-}
-
+.signalCard { border-radius: 20px; padding: 28px; display: flex; flex-direction: column; align-items: center; margin-bottom: 16px; }
+.signalEmoji { font-size: 60px; margin-bottom: 8px; }
+.signalLabel { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+.glucoseValue { font-size: 40px; font-weight: 800; color: #1A237E; }
+.interventionBox { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+.interventionText { font-size: 17px; line-height: 1.8; color: #212121; }
 .nurseButton {
-  width: 100%;
-  background: #C62828;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-bottom: 12px;
+  width: 100%; background: #C62828; color: #fff; border: none;
+  border-radius: 16px; padding: 18px; font-size: 20px; font-weight: 700; cursor: pointer; margin-bottom: 10px;
 }
-
 .retryButton {
-  width: 100%;
-  background: #E0E0E0;
-  color: #424242;
-  border: none;
-  border-radius: 16px;
-  padding: 20px;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
+  width: 100%; background: #E0E0E0; color: #424242; border: none;
+  border-radius: 16px; padding: 18px; font-size: 17px; font-weight: 600; cursor: pointer;
 }
+.retryButton:hover { background: #BDBDBD; }
 
-.retryButton:hover {
-  background: #BDBDBD;
+/* History */
+.historyList { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.historyItem {
+  background: #fff; border-radius: 14px; padding: 16px;
+  display: flex; justify-content: space-between; align-items: center;
+  border-left: 5px solid #BDBDBD;
 }
+.historyLeft { display: flex; align-items: center; gap: 12px; }
+.historyEmoji { font-size: 28px; }
+.historyGlucose { font-size: 22px; font-weight: 700; color: #1A237E; }
+.historyGlucose span { font-size: 13px; font-weight: 400; color: #757575; }
+.historyMeta { font-size: 13px; color: #757575; margin-top: 2px; }
+.historyRight { text-align: right; }
+.historyDate { font-size: 13px; color: #9E9E9E; }
+.historyWeather { font-size: 13px; color: #5C6BC0; margin-top: 4px; }
