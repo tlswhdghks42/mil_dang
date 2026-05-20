@@ -29,11 +29,25 @@
    - assignAbVariant: userId+experimentId 해시 기반 결정론적 A/B 배정
    - 내장 템플릿: standard-v1(표준 지시형), empathetic-v2(공감형)
 
+## Phase 4 (완료)
+1. 수영구 날씨 API 실연결 (`phase4WeatherAdapter.ts`)
+   - 기상청(KMA) 초단기실황 API 어댑터 (수영구 격자 nx=99, ny=75)
+   - 5분 TTL 캐시로 과도한 API 호출 방지
+   - HTTP 재시도 (exponential backoff, 최대 3회)
+   - 환경변수(WEATHER_API_KEY) 기반 설정 로더
+2. 보호자 동기화 실어댑터 (`phase4GuardianAdapters.ts`)
+   - FCM HTTP v1 PushSender (Android 우선순위 high 설정)
+   - 알리고 SMS SmsSender (form-encoded POST)
+   - InMemoryGuardianChannel → SSE/WebSocket 교체 가능한 실시간 채널 인터페이스
+   - notifyGuardiansOnMeasurement: 연결된 보호자에게 일괄 실시간 발송
+   - 환경변수(FCM_PROJECT_ID, ALIGO_API_KEY 등) 기반 설정 로더
+3. QR 대시보드 데이터 서비스 (`phase4Dashboard.ts`)
+   - BloodSugarRepository 인터페이스 + InMemoryBloodSugarRepository
+   - getDashboardData: QR 토큰 검증 후 혈당 기록 조회 및 집계
+   - DashboardStats: 평균혈당/신호 분포/green 비율/마일리지 합계
+   - DashboardAlerts: 고위험 신호 여부/연속 red 횟수 감지
+
 ## 전체 남은 단계 로드맵
-1. Phase 4 (로컬 연계/백엔드 통합)
-   - 수영구 실날씨/보건소 API 실연결
-   - 보호자 앱/웹뷰 실시간 동기화 파이프라인
-   - QR 스캔 후 대시보드 데이터 조회 API 완성
 2. Phase 5 (품질/운영)
    - 통합/E2E 테스트 자동화
    - 장애 복구 및 알림 누락 모니터링
