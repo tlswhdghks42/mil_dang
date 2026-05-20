@@ -17,6 +17,10 @@ on:
           - preview
           - production
 
+# [해결] 워크플로우 전체에 Node 24 강제 적용 환경변수 추가
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   build-apk:
     name: Build Android APK
@@ -33,7 +37,8 @@ jobs:
         with:
           node-version: 20
           cache: "npm"
-          cache-dependency-path: mobile/package-lock.json
+          # 와일드카드로 지정하여 경로 인식 안정성 강화
+          cache-dependency-path: "**/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
