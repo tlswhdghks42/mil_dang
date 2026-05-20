@@ -47,11 +47,29 @@
    - DashboardStats: 평균혈당/신호 분포/green 비율/마일리지 합계
    - DashboardAlerts: 고위험 신호 여부/연속 red 횟수 감지
 
-## 전체 남은 단계 로드맵
-2. Phase 5 (품질/운영)
-   - 통합/E2E 테스트 자동화
-   - 장애 복구 및 알림 누락 모니터링
-   - 개인정보/의료정보 보안 점검, 파일럿 배포
+## Phase 5 (완료)
+1. CI/CD 자동화 (`.github/workflows/ci.yml`)
+   - Node.js 20/22 매트릭스 빌드, PR/push 트리거
+2. E2E 통합 테스트 6개 시나리오 (`test/e2e.test.ts`)
+   - 정상 측정 전체 흐름 / 저혈당 응급 / 고혈당 반복 / 식단+날씨 컨텍스트 / A/B 실험 / 알림 장애 복구
+3. 장애 복구/모니터링 (`phase5Monitor.ts`)
+   - generateHealthReport: LLM 실패율/가드레일 실패율/p95 기반 healthy/degraded/critical 판정
+   - AlertRecoveryQueue: 실패 알림 재발송, pruneExhausted로 포기 항목 분리
+   - detectAndEnqueueMissedAlerts: maxAgeMs 내 누락 이벤트 감지 → 큐 자동 적재
+4. 보안 점검 (`phase5Security.ts`)
+   - PII 마스킹: 전화번호/userId/이름
+   - 데이터 접근 제어: assertDataAccess/assertGuardianAccess (DataAccessError)
+   - sanitizeRecordForLog: symptoms·medicationTaken·dietAnalysis 제외
+   - InMemoryAuditLogStore: eventType별/사용자별/실패 감사 로그 조회
+   - verifyQrTokenWithAudit: QR 검증 성공/실패 감사 로그 자동 기록
+   - containsPii/redactPii: LLM 출력 내 개인정보 스캔·제거
+
+## 전체 진행 완료
+- Phase 1~5 구현 완료, 테스트 169개 통과
+- 실서비스 배포 전 필요 사항:
+  - WEATHER_API_KEY, FCM_PROJECT_ID/ACCESS_TOKEN, ALIGO_API_KEY 등 환경변수 설정
+  - React Native(Expo) 앱 전환 및 APK 빌드
+  - 파일럿 사용자 대상 베타 배포
 
 ## 참고
 - 외부 API/실서버 연동은 인터페이스 중심으로 구현되어 실제 배포 전 엔드포인트 연결/인증 설정이 필요함.
