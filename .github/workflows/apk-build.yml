@@ -50,7 +50,7 @@ jobs:
         if: github.event_name == 'push' || github.event.inputs.profile == 'preview'
         run: npm run build:apk
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           FCM_PROJECT_ID: ${{ secrets.FCM_PROJECT_ID }}
           FCM_ACCESS_TOKEN: ${{ secrets.FCM_ACCESS_TOKEN }}
@@ -62,7 +62,7 @@ jobs:
         if: github.event.inputs.profile == 'production'
         run: npm run build:aab
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
           FCM_PROJECT_ID: ${{ secrets.FCM_PROJECT_ID }}
           FCM_ACCESS_TOKEN: ${{ secrets.FCM_ACCESS_TOKEN }}

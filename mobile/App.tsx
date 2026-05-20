@@ -4,38 +4,33 @@ import { SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { MeasurementScreen } from "./screens/MeasurementScreen";
 import type { LlmClient } from "../src/application/phase3InterventionLLM";
 
-// Anthropic Claude API 기반 LLM 클라이언트
-// 실제 배포 시 ANTHROPIC_API_KEY 환경변수를 EAS Build secret으로 설정
-function createClaudeClient(): LlmClient {
-  const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
+// Groq 무료 API 기반 LLM 클라이언트 (console.groq.com에서 무료 키 발급)
+function createLlmClient(): LlmClient {
+  const apiKey = process.env.GROQ_API_KEY ?? "";
 
   return {
     async complete(prompt: string): Promise<string> {
-      if (!apiKey) {
-        // 키가 없을 경우 기본 문구 반환 (개발/테스트용)
-        return "";
-      }
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      if (!apiKey) return "";
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
+          "Authorization": `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
+          model: "llama-3.1-8b-instant",
           max_tokens: 256,
           messages: [{ role: "user", content: prompt }],
         }),
       });
-      if (!res.ok) throw new Error(`Claude API 오류: ${res.status}`);
-      const json = (await res.json()) as { content: Array<{ text: string }> };
-      return json.content[0]?.text ?? "";
+      if (!res.ok) throw new Error(`Groq API 오류: ${res.status}`);
+      const json = (await res.json()) as { choices: Array<{ message: { content: string } }> };
+      return json.choices[0]?.message.content ?? "";
     },
   };
 }
 
-const llmClient = createClaudeClient();
+const llmClient = createLlmClient();
 const APP_USER_ID = "suyeong-resident-001"; // 실제 앱에서는 인증 후 발급
 
 export default function App() {
