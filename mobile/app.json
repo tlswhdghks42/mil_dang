@@ -29,9 +29,6 @@
       "supportsTablet": false,
       "bundleIdentifier": "kr.go.suyeong.mildang"
     },
-    "plugins": [
-      "expo-font"
-    ],
     "extra": {
       "eas": {
         "projectId": "f0585395-b23b-4e68-b076-36125d014d1b"
