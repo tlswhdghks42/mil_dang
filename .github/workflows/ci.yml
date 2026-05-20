@@ -1,74 +1,48 @@
-name: APK Build (EAS)
+name: CI
 
 on:
   push:
+    branches: [main, "claude/**", "feature/**"]
+  pull_request:
     branches: [main]
-    paths:
-      - "mobile/**"
-      - "src/**"
-  workflow_dispatch:
-    inputs:
-      profile:
-        description: "EAS Build profile"
-        required: true
-        default: "preview"
-        type: choice
-        options:
-          - preview
-          - production
 
 # [해결] 워크플로우 전체에 Node 24 강제 적용 환경변수 추가
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
 jobs:
-  build-apk:
-    name: Build Android APK
+  test:
+    name: Test (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./mobile
+    strategy:
+      matrix:
+        node-version: [20, 22]
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: "npm"
-          # 와일드카드로 지정하여 경로 인식 안정성 강화
+          # [해결] 구체적인 파일 경로를 추적할 수 있도록 캐시 의존성 경로 추가
           cache-dependency-path: "**/package-lock.json"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Setup EAS
-        uses: expo/expo-github-action@v8
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
         with:
-          eas-version: latest
-          token: ${{ secrets.EXPO_TOKEN }}
-
-      - name: Build APK (preview)
-        if: github.event_name == 'push' || github.event.inputs.profile == 'preview'
-        run: npm run build:apk
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
-          FCM_PROJECT_ID: ${{ secrets.FCM_PROJECT_ID }}
-          FCM_ACCESS_TOKEN: ${{ secrets.FCM_ACCESS_TOKEN }}
-          ALIGO_API_KEY: ${{ secrets.ALIGO_API_KEY }}
-          ALIGO_USER_ID: ${{ secrets.ALIGO_USER_ID }}
-          ALIGO_SENDER: ${{ secrets.ALIGO_SENDER }}
-
-      - name: Build AAB (production)
-        if: github.event.inputs.profile == 'production'
-        run: npm run build:aab
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          WEATHER_API_KEY: ${{ secrets.WEATHER_API_KEY }}
-          FCM_PROJECT_ID: ${{ secrets.FCM_PROJECT_ID }}
-          FCM_ACCESS_TOKEN: ${{ secrets.FCM_ACCESS_TOKEN }}
-          ALIGO_API_KEY: ${{ secrets.ALIGO_API_KEY }}
-          ALIGO_USER_ID: ${{ secrets.ALIGO_USER_ID }}
-          ALIGO_SENDER: ${{ secrets.ALIGO_SENDER }}
+          name: test-results-node${{ matrix.node-version }}
+          path: |
+            test-results/
+          retention-days: 7
