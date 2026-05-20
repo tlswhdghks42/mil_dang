@@ -29,7 +29,12 @@ function countHits(text: string, keywords: string[]): number {
 }
 
 function containsNegationNearKeyword(text: string, keyword: string): boolean {
-  return denyKeywords.some((deny) => text.includes(`${keyword}${deny}`) || text.includes(`${deny} ${keyword}`));
+  return denyKeywords.some(
+    (deny) =>
+      text.includes(`${keyword}${deny}`) ||
+      text.includes(`${deny} ${keyword}`) ||
+      text.includes(`${keyword} ${deny}`),
+  );
 }
 
 export function analyzeDietText(rawSpeechText: string): DietAnalysis {

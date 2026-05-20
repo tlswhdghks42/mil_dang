@@ -1,7 +1,8 @@
-import { analyzeMeasurement } from "./phase1Flow";
+import { analyzeMeasurement, analyzeMeasurementWithLlm, LlmRefinementOptions } from "./phase1Flow";
 import { followUpMinutesFor, makeSafetyEvent } from "../domain/logic";
 import { MealTiming, SignalLevel, SafetyEvent } from "../domain/types";
-import { ScreenKey } from "../screens/phase1";
+
+export type ScreenKey = "home" | "input" | "result" | "exit";
 
 export interface Phase1State {
   screen: ScreenKey;
@@ -30,7 +31,7 @@ export function updateInput(state: Phase1State, patch: Partial<Pick<Phase1State,
   return { ...state, ...patch };
 }
 
-export function analyzeAndMoveResult(state: Phase1State, nowIso: string, userId = "demo-user"): Phase1State {
+export function analyzeAndMoveResult(state: Phase1State, nowIso: string, userId: string): Phase1State {
   const glucoseMgDl = Number(state.glucoseText);
   if (!Number.isFinite(glucoseMgDl) || glucoseMgDl <= 0) {
     throw new Error("혈당 수치는 0보다 큰 숫자여야 합니다.");
@@ -39,6 +40,45 @@ export function analyzeAndMoveResult(state: Phase1State, nowIso: string, userId 
   const analyzed = analyzeMeasurement({
     glucoseMgDl,
     mealTiming: state.mealTiming,
+  });
+
+  const latestSafetyEvent = makeSafetyEvent({
+    eventId: `ev-${nowIso}`,
+    userId,
+    recordId: `rec-${nowIso}`,
+    signalLevel: analyzed.signal,
+    nowIso,
+  });
+
+  const redRecheckCount = analyzed.signal === "red" ? state.redRecheckCount + 1 : 0;
+  const showNurseCallButton = redRecheckCount >= 2;
+
+  return {
+    ...state,
+    screen: "result",
+    signal: analyzed.signal,
+    interventionText: analyzed.interventionText,
+    latestSafetyEvent: latestSafetyEvent ?? undefined,
+    redRecheckCount,
+    showNurseCallButton,
+  };
+}
+
+export async function analyzeAndMoveResultWithLlm(
+  state: Phase1State,
+  nowIso: string,
+  llmOptions: LlmRefinementOptions,
+  userId: string,
+): Promise<Phase1State> {
+  const glucoseMgDl = Number(state.glucoseText);
+  if (!Number.isFinite(glucoseMgDl) || glucoseMgDl <= 0) {
+    throw new Error("혈당 수치는 0보다 큰 숫자여야 합니다.");
+  }
+
+  const analyzed = await analyzeMeasurementWithLlm({
+    glucoseMgDl,
+    mealTiming: state.mealTiming,
+    llmOptions,
   });
 
   const latestSafetyEvent = makeSafetyEvent({
