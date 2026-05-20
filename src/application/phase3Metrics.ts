@@ -72,7 +72,8 @@ export class InMemoryMetricsCollector implements MetricsSink {
     const failures = this.metrics.filter((m) => !m.success);
     const guardrailFails = this.metrics.filter((m) => m.success && !m.guardrailPassed);
     const latencies = [...this.metrics.map((m) => m.latencyMs)].sort((a, b) => a - b);
-    const p95Idx = Math.min(Math.floor(latencies.length * 0.95), latencies.length - 1);
+    // ceil 기반 nearest-rank: floor는 N=20일 때 index 19(100th percentile)를 반환하는 문제
+    const p95Idx = Math.min(Math.ceil(latencies.length * 0.95) - 1, latencies.length - 1);
 
     return {
       totalCalls: total,

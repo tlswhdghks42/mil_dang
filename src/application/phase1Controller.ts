@@ -1,7 +1,8 @@
 import { analyzeMeasurement, analyzeMeasurementWithLlm, LlmRefinementOptions } from "./phase1Flow";
 import { followUpMinutesFor, makeSafetyEvent } from "../domain/logic";
 import { MealTiming, SignalLevel, SafetyEvent } from "../domain/types";
-import { ScreenKey } from "../screens/phase1";
+
+export type ScreenKey = "home" | "input" | "result" | "exit";
 
 export interface Phase1State {
   screen: ScreenKey;
@@ -30,7 +31,7 @@ export function updateInput(state: Phase1State, patch: Partial<Pick<Phase1State,
   return { ...state, ...patch };
 }
 
-export function analyzeAndMoveResult(state: Phase1State, nowIso: string, userId = "demo-user"): Phase1State {
+export function analyzeAndMoveResult(state: Phase1State, nowIso: string, userId: string): Phase1State {
   const glucoseMgDl = Number(state.glucoseText);
   if (!Number.isFinite(glucoseMgDl) || glucoseMgDl <= 0) {
     throw new Error("혈당 수치는 0보다 큰 숫자여야 합니다.");
@@ -67,7 +68,7 @@ export async function analyzeAndMoveResultWithLlm(
   state: Phase1State,
   nowIso: string,
   llmOptions: LlmRefinementOptions,
-  userId = "demo-user",
+  userId: string,
 ): Promise<Phase1State> {
   const glucoseMgDl = Number(state.glucoseText);
   if (!Number.isFinite(glucoseMgDl) || glucoseMgDl <= 0) {

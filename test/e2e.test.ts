@@ -210,7 +210,7 @@ describe("E2E 시나리오 3: 고혈당 반복 측정 흐름", () => {
     let state = updateInput(initialPhase1State, { glucoseText: "220", mealTiming: "postprandial" });
 
     // 1회 측정
-    state = await analyzeAndMoveResultWithLlm(state, NOW, { llmClient: llm });
+    state = await analyzeAndMoveResultWithLlm(state, NOW, { llmClient: llm }, "u1");
     expect(state.signal).toBe("red");
     expect(state.showNurseCallButton).toBe(false);
     await repo.save({
@@ -220,7 +220,7 @@ describe("E2E 시나리오 3: 고혈당 반복 측정 흐름", () => {
     });
 
     // 2회 측정
-    state = await analyzeAndMoveResultWithLlm(state, "2026-05-20T09:30:00.000Z", { llmClient: llm });
+    state = await analyzeAndMoveResultWithLlm(state, "2026-05-20T09:30:00.000Z", { llmClient: llm }, "u1");
     expect(state.showNurseCallButton).toBe(true);
     await repo.save({
       recordId: "e2e-red-2", userId: "u1", measuredAt: "2026-05-20T09:30:00.000Z",

@@ -58,8 +58,11 @@ export class WeatherCache {
 function buildKmaUrl(config: KmaApiConfig, nowIso: string): string {
   const dt = new Date(nowIso);
   const pad = (n: number) => String(n).padStart(2, "0");
-  const baseDate = `${dt.getFullYear()}${pad(dt.getMonth() + 1)}${pad(dt.getDate())}`;
-  const baseTime = `${pad(dt.getHours())}00`;
+  // 초단기실황 발표 주기(10분) + 처리 지연(약 30~40분)을 고려해 40분 전 시각 기준으로 요청
+  const safeTime = new Date(dt.getTime() - 40 * 60 * 1000);
+  const baseDate = `${safeTime.getFullYear()}${pad(safeTime.getMonth() + 1)}${pad(safeTime.getDate())}`;
+  const baseMin = Math.floor(safeTime.getMinutes() / 10) * 10;
+  const baseTime = `${pad(safeTime.getHours())}${pad(baseMin)}`;
 
   const params = new URLSearchParams({
     serviceKey: config.serviceKey,

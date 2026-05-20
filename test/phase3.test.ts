@@ -518,6 +518,7 @@ describe("analyzeAndMoveResultWithLlm", () => {
       state,
       "2026-05-20T00:00:00.000Z",
       { llmClient: { async complete() { return "오늘 혈당 상태가 좋아요!"; } } },
+      "test-user",
     );
     expect(next.screen).toBe("result");
     expect(next.signal).toBe("green");
@@ -529,7 +530,7 @@ describe("analyzeAndMoveResultWithLlm", () => {
     await expect(
       analyzeAndMoveResultWithLlm(state, "2026-05-20T00:00:00.000Z", {
         llmClient: { async complete() { return ""; } },
-      }),
+      }, "test-user"),
     ).rejects.toThrow("0보다 큰 숫자");
   });
 
@@ -539,6 +540,7 @@ describe("analyzeAndMoveResultWithLlm", () => {
       state,
       "2026-05-20T00:00:00.000Z",
       { llmClient: { async complete() { throw new Error("LLM down"); } } },
+      "test-user",
     );
     expect(next.screen).toBe("result");
     expect(next.interventionText).toBeTruthy();
@@ -556,6 +558,7 @@ describe("analyzeAndMoveResultWithLlm", () => {
           },
         },
       },
+      "test-user",
     );
     expect(next.signal).toBe("critical_low");
     expect(next.latestSafetyEvent).toBeDefined();
@@ -572,6 +575,7 @@ describe("analyzeAndMoveResultWithLlm", () => {
         llmClient: { async complete() { return "복약을 확인하고 30분 후 재측정해 주세요."; } },
         metricsSink: collector,
       },
+      "test-user",
     );
     const summary = collector.summary();
     expect(summary.totalCalls).toBe(1);
@@ -584,9 +588,9 @@ describe("analyzeAndMoveResultWithLlm", () => {
     const llm = { async complete() { return "복약을 확인하고 30분 후 재측정해 주세요."; } };
     const now = "2026-05-20T00:00:00.000Z";
 
-    state = await analyzeAndMoveResultWithLlm(state, now, { llmClient: llm });
+    state = await analyzeAndMoveResultWithLlm(state, now, { llmClient: llm }, "test-user");
     expect(state.showNurseCallButton).toBe(false);
-    state = await analyzeAndMoveResultWithLlm(state, now, { llmClient: llm });
+    state = await analyzeAndMoveResultWithLlm(state, now, { llmClient: llm }, "test-user");
     expect(state.showNurseCallButton).toBe(true);
   });
 });
